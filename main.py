@@ -4,7 +4,6 @@ from distance_fns import histogram_difference, histogram_intersection, histogram
 import pandas as pd
 from custom_types import *
 
-
 REAL_WORLD_SET_PATH = "./real_world_dataset"
 SIMULATE_SET_PATH = "not existing right now"
 
@@ -20,21 +19,19 @@ def removeNewLine(cm):
     return str(cm).replace('\n', '')
 
 
+def get_stat_dataframe(distanceName: str, l: Lambda, d: Delta, cm: ConfusionMatrix):
+    rec, prec = compute_precision_recall(cm)
+    dataGroup = {"DistanceFN": [distanceName], "Lambda": [l], "Delta": [d],
+                 "Confusion Matrix": [cm], "Precision": [prec], "Recall": [rec]}
+
+    return pd.DataFrame(data=dataGroup)
+
+
 def compute_stats(name: str, df: DistanceFN, ls: List[Lambda], ds: List[Delta], dataset: VideoDataset):
     res = measure_all_hyperparams_performance(
         ls, ds, df, dataset)
 
-    stats = pd.DataFrame()
-
-    for l, d, cm in res:
-        rec, prec = compute_precision_recall(cm)
-        dataGroup = {"DistanceFN": [name], "Lambda": [l], "Delta": [d],
-                     "Confusion Matrix": [cm], "Precision": [prec], "Recall": [rec]}
-
-        record = pd.DataFrame(data=dataGroup)
-        stats = stats.append(record)
-
-    return stats
+    return pd.concat([get_stat_dataframe(name, l, d, cm) for l, d, cm in res])
 
 
 def compute_stats_all_distances(distances: [Tuple[str, DistanceFN]], ls: List[Lambda], ds: List[Delta], dataset: VideoDataset):
