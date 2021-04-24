@@ -48,7 +48,7 @@ def histogram_intersection(frame1, frame2):
     # Invert distance so that dissimilar images have distance near 1.0, similar images have distance near 0
     distance = 1.0 - distance
     
-    return distance 
+    return intersection
 
 def createBipartiteGraph(TargetVideo, QueryVideo, threshold, k):
     #print("graph")
@@ -69,17 +69,17 @@ def createBipartiteGraph(TargetVideo, QueryVideo, threshold, k):
         #BG.add_nodes_from([i], bipartite=1)
         qNodes.append(str(i))
 
-        distance = histogram_intersection(Tframe, Qframe)
+        intersection = histogram_intersection(Tframe, Qframe)
         #print(distance)
 
-        if distance > threshold:
+        if intersection > threshold:
             BG.add_edges_from([(k+i,str(i))])
     
     BG.add_nodes_from(tNodes, bipartite=0)
     BG.add_nodes_from(qNodes, bipartite=1)
     #print(BG.nodes)
     #print(BG.edges)
-    MCM = bipartite.matching.maximum_matching(BG, tNodes)
+    MCM = bipartite.matching.maximum_matching(BG, qNodes)
     LMCM = int(len(MCM)/2)
     #print(MCM)
     return LMCM, MCM, BG
@@ -93,6 +93,7 @@ def calcTFirstMCM(MCM):
     else:
         minimum = min(min(tkeys), min(tvals))
     return minimum
+
 def calcTLastMCM(MCM):
     tkeys = [num for num in MCM.keys() if isinstance(num, (int))]
     tvals = [num for num in MCM.values() if isinstance(num, (int))]
@@ -133,7 +134,7 @@ def SubsequenceID(TargetVideo, QueryVideo, threshold, maxEditDistance = 0):
     check = int(TargetVideo.get(cv2.CAP_PROP_FRAME_COUNT)) - int(QueryVideo.get(cv2.CAP_PROP_FRAME_COUNT)) - maxEditDistance
     qlength = int(QueryVideo.get(cv2.CAP_PROP_FRAME_COUNT))
     tlength = int(TargetVideo.get(cv2.CAP_PROP_FRAME_COUNT))
-    while k < int(TargetVideo.get(cv2.CAP_PROP_FRAME_COUNT)) - int(QueryVideo.get(cv2.CAP_PROP_FRAME_COUNT)) - maxEditDistance: #Potentially -2 as well?
+    while k < int(TargetVideo.get(cv2.CAP_PROP_FRAME_COUNT)) - int(QueryVideo.get(cv2.CAP_PROP_FRAME_COUNT)) - maxEditDistance -2: #Potentially -2 as well?
         print(k, "/", check)
         #construct bipartite graph of query video and target clip and calculate maximum cardinality of graph and the Frames for the graph
         LMCM, MCM, BG = createBipartiteGraph(TargetVideo, QueryVideo, threshold, k)
@@ -145,7 +146,7 @@ def SubsequenceID(TargetVideo, QueryVideo, threshold, maxEditDistance = 0):
         DMCM = tl-tf+1
 
         #calculate hit type
-        hit = calcHit(MCM, LMCM, DMCM, maxEditDistance, int(QueryVideo.get(cv2.CAP_PROP_FRAME_COUNT)))
+        hit = calcHit(MCM, LMCM, DMCM, maxEditDistance, int(QueryVideo.get(cv2.CAP_PROP_FRAME_COUNT))-1)
         #if hit function does not return 0
         if hit > 0: #Query was found at location k
             hitPos.append(tf)
@@ -164,10 +165,9 @@ def SubsequenceID(TargetVideo, QueryVideo, threshold, maxEditDistance = 0):
 
     return (hitPos, hitSize, hitType)
 
-target = cv2.VideoCapture('c:/Users/Emmy/AppData/Local/Programs/Python/Python38-32/VideoQuery.mp4')
-query = cv2.VideoCapture('c:/Users/Emmy/AppData/Local/Programs/Python/Python38-32/VideoQuery.mp4')
-#SubsequenceID(tahitrget, query, 0.5, 0)
-hitPos, hitSize, hitType = SubsequenceID(target, query, 0.6, 0)
+target = cv2.VideoCapture('c:/Users/covar/Documents/GitHub/StringAlgorithmsTermProject/TargetVideo.mp4')
+query = cv2.VideoCapture('c:/Users/covar/Documents/GitHub/StringAlgorithmsTermProject/QueryVideo.mp4')
+hitPos, hitSize, hitType = SubsequenceID(target, query, 0.8, 0)
 
 print("Query video was found at frame(s): ", hitPos)
     
