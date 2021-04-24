@@ -19,6 +19,24 @@ TRUE_QUERY_SUB_DIR = "true_query"
 
 """
 
+"""
+Each dataset can have 5 target videos
+each target will have 5 truths and 5 Falses (At least 5 truths)
+
+Real Dataset:
+Take videos from VCDB
+
+Fake Dataset:
+Take a video then take slices out of that video.
+
+
+1. An exact query (Q1)
+2. A query with a removal operation (Q2)
+3. A query with an insertion operation (Q3); and
+4. A query with a removal operation and temporal re-
+ordering (Q4)
+"""
+
 
 def get_dataset(path: str) -> VideoDataset:
     files = [f for f in listdir(path)]
@@ -28,7 +46,7 @@ def get_dataset(path: str) -> VideoDataset:
 # Gets the video and test query videos for a given video path
 
 
-def get_video_set(path: str) -> (Video, [(Video, bool)]):
+def get_video_set(path: str) -> (str, [(str, bool)]):
     # First file found is target video
     targetVideoPath = [f for f in listdir(path)
                        if isfile(join(path, f))][0]
@@ -41,7 +59,7 @@ def get_video_set(path: str) -> (Video, [(Video, bool)]):
 
 
 # Gets the given query videos for the video path
-def get_query_video_set(path: str, type: bool) -> [(Video, bool)]:
+def get_query_video_set(path: str, type: bool) -> [(str, bool)]:
     videoPaths = [f for f in listdir(path)]
     return [(get_video_frame(join(path, f)), type) for f in videoPaths]
 
