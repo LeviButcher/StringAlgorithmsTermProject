@@ -1,12 +1,14 @@
 
 
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, exists
 from custom_types import VideoDataset, Video
 import cv2
+import skvideo.io
 
 
 TRUE_QUERY_SUB_DIR = "true_query"
+FALSE_QUERY_SUB_DIR = "false_query"
 
 """
     Dataset Directory Format:
@@ -48,27 +50,38 @@ def get_dataset(path: str) -> VideoDataset:
 
 def get_video_set(path: str) -> (str, [(str, bool)]):
     # First file found is target video
-    targetVideoPath = [f for f in listdir(path)
-                       if isfile(join(path, f))][0]
-    targetVideo = get_video_frame(join(path, targetVideoPath))
+    targetPath = [f for f in listdir(path)
+                  if isfile(join(path, f))][0]
+    targetPath = join(path, targetPath)
 
-    true_video_query = get_query_video_set(
+    truePaths = get_query_video_set(
         join(path, TRUE_QUERY_SUB_DIR), True)
 
-    return (targetVideo, true_video_query)
+    falsePaths = get_query_video_set(
+        join(path, FALSE_QUERY_SUB_DIR), False)
+
+    queryPaths = [ff for f in [truePaths, falsePaths] for ff in f]
+
+    return (targetPath, queryPaths)
 
 
 # Gets the given query videos for the video path
 def get_query_video_set(path: str, type: bool) -> [(str, bool)]:
+    if not exists(path):
+        return []
     videoPaths = [f for f in listdir(path)]
-    return [(get_video_frame(join(path, f)), type) for f in videoPaths]
+    return [(join(path, f), type) for f in videoPaths]
 
 
 def get_video_frame(path: str) -> Video:
-    cap = cv2.VideoCapture(path)
-    video = []
-    while(cap.isOpened()):
-        ret, frame = cap.read()
-        cap.release() if not ret else video.append(frame)
+    print(path)
+    return skvideo.io.vread(path, height=852, width=480)
+    # print(path)
+    # cap = cv2.VideoCapture(path)
+    # video = []
+    # while(cap.isOpened()):
+    #     ret, frame = cap.read()
+    #     cap.release() if not ret else video.append(frame)
+    # cv2.destroyAllWindows()
 
-    return video
+    # return video

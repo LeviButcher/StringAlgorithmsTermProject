@@ -8,3 +8,4 @@ pytest-testmon
 pytest-watch
 sklearn
 pytest-mock
+scikit-video

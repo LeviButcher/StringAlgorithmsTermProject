@@ -4,20 +4,20 @@ import numpy as np
 
 class TestUtils:
     def test_generate_confusion_matrix_simple_case(self):
-        testDataset = [([], [([], True), ([], False)])]
+        testDataset = [("", [("", True), ("", False)])]
         expected_cm = [[1, 0], [0, 1]]
-        predicted = [[4], []]
+        predicted = [[[4]], [[]]]
 
         res_cm = generate_confusion_matrix(testDataset, predicted)
 
         assert np.array_equal(res_cm, expected_cm)
 
     def test_generate_confusion_matrix_complex_case(self):
-        testDataset = [([], [([], True), ([], False), ([], True)]),
-                       ([], [([], False), ([], False), ([], True)])]
+        testDataset = [("", [("", True), ("", False), ("", True)]),
+                       ("", [("", False), ("", False), ("", True)])]
 
         # all correct except one True Negative
-        predicted = [[2, 4], [], [5], [1], [], [2]]
+        predicted = [[[2, 4]], [[]], [[5]], [[1]], [[]], [[2]]]
 
         expected_cm = [[2, 1], [0, 3]]
 
@@ -35,12 +35,13 @@ class TestUtils:
 
         def fakeDistance(f, ff): return .5
 
-        testDataset = [([], [([], False), ([], True), ([], False)]),
-                       ([], [([], False), ([], False), ([], False)])]
+        testDataset = [("", [("", False), ("", True), ("", False)]),
+                       ("", [("", False), ("", False), ("", False)])]
 
         expected_cm = [[0, 5], [0, 1]]
 
         mocker.patch('video_matching.findVideoSeq', return_value=[1, 2])
+        mocker.patch('get_dataset.get_video_frame', return_value=[])
 
         res_cm = measure_distance_performance(l, d, fakeDistance, testDataset)
 
