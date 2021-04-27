@@ -93,19 +93,50 @@ def histogram_mean_difference(frame1, frame2):
     return distance
 
 
+def absolute_distance(frame1, frame2):
+    # Inspired by the Hamming distance for strings - minimum number of substitutions to change
+    # Also use idea of Weighted Distance, where different character pairs have different distance
+    # Leads to element-wise absolute distance between each value in the frame
+    # Would be interesting to investigate insertions and deletions but memory is limited...
+    
+    # Sum pixel difference
+    # Clip to avoid wraparound during subtraction...
+    dist_array1 = (frame1.astype(np.int16) - frame2).clip(0, 255).astype(np.uint8)
+    dist_array2 = (frame2.astype(np.int16) - frame1).clip(0, 255).astype(np.uint8)
+    dist_array = dist_array1 + dist_array2
+    
+    distance = np.sum(dist_array)
+    
+    # Normalize
+    max_possible_diff = len(frame1) * len(frame1[0]) * 256.0
+    distance = distance/max_possible_diff
+    
+    return distance
+
+
+
 # Main for testing
 if __name__ == "__main__":
     
-    im1 = cv2.imread('./sample_images/hist_lowkey.jpg')
+    #im1 = cv2.imread('./sample_images/hist_lowkey.jpg')
     #im1 = cv2.imread('./sample_images/hist_highkey_auto.jpg')
+    
+    im1 = cv2.imread('./sample_images/hist_highcont.jpg')
     
     #im2 = cv2.imread('./sample_images/hist_lowkey.jpg')
     #im2 = cv2.imread('./sample_images/hist_lowkey_auto.jpg')
-    im2 = cv2.imread('./sample_images/hist_highkey.jpg')
+    #im2 = cv2.imread('./sample_images/hist_highkey.jpg')
+    
+    im2 = cv2.imread('./sample_images/hist_lowcont.jpg')
+    
+    # Convert to grayscale for testing
+    im1 = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
+    im2 = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
     
     #int_dist = histogram_intersection(im1, im2)
     #int_dist = histogram_difference(im1, im2)
-    int_dist = histogram_mean_difference(im1, im2)
+    #int_dist = histogram_mean_difference(im1, im2)
+    int_dist = absolute_distance(im1, im2)
     
     print(int_dist)
     
