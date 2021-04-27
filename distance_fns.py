@@ -21,13 +21,14 @@ def get_histograms(frame1, frame2):
     
     # Assume grayscale and 256 bins is ok for now....
     
+    # Conversion to grayscale is done in get_video_frame...
     # Convert images to grayscale
-    im1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
-    im2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
+    #im1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
+    #im2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
     
     # Calculate histogram for each images
-    hist1 = cv2.calcHist([im1], [0], None, [256], [0,256])
-    hist2 = cv2.calcHist([im2], [0], None, [256], [0,256])
+    hist1 = cv2.calcHist([frame1], [0], None, [256], [0,256])
+    hist2 = cv2.calcHist([frame2], [0], None, [256], [0,256])
     
     # Normalize histograms
     max1 = max(hist1)*1.0
