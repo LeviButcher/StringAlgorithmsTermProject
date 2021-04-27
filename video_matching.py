@@ -3,20 +3,22 @@ from get_dataset import get_video_frame
 from distance_fns import *
 
 # Graph comparison on target and query video
+
+
 def createBipartiteGraph(TargetVideo, QueryVideo, threshold, k, DistanceFN):
     from distance_fns import histogram_intersection
     import networkx as nx
     from networkx.algorithms import bipartite
 
-    #print("graph")
+    # print("graph")
     BG = nx.Graph()
     qNodes = []
     tNodes = []
 
-    #for i in range(0,k-1): 
+    # for i in range(0,k-1):
     #    successT, Tframe = TargetVideo.read()
 
-    for i in range(0,len(QueryVideo-1)):
+    for i in range(0, len(QueryVideo-1)):
         #successT, Tframe = TargetVideo.read()
         #BG.add_nodes_from([k+i], bipartite=0)
         tNodes.append(k+i)
@@ -25,22 +27,23 @@ def createBipartiteGraph(TargetVideo, QueryVideo, threshold, k, DistanceFN):
         qNodes.append(str(i))
 
         intersection = DistanceFN(TargetVideo[k+i], QueryVideo[i])
-        #print(distance)
+        # print(distance)
 
         if intersection < threshold:
-            BG.add_edges_from([(k+i,str(i))])
-    
+            BG.add_edges_from([(k+i, str(i))])
+
     BG.add_nodes_from(tNodes, bipartite=0)
     BG.add_nodes_from(qNodes, bipartite=1)
-    #print(BG.nodes)
-    #print(BG.edges)
+    # print(BG.nodes)
+    # print(BG.edges)
     MCM = bipartite.matching.maximum_matching(BG, qNodes)
     LMCM = int(len(MCM)/2)
-    #print(MCM)
+    # print(MCM)
     return LMCM, MCM, BG
 
+
 def calcTFirstMCM(MCM):
-    #min of t frames in MCM
+    # min of t frames in MCM
     tkeys = [num for num in MCM.keys() if isinstance(num, (int))]
     tvals = [num for num in MCM.values() if isinstance(num, (int))]
     if len(tkeys) == 0 or len(tvals) == 0:
@@ -48,6 +51,7 @@ def calcTFirstMCM(MCM):
     else:
         minimum = min(min(tkeys), min(tvals))
     return minimum
+
 
 def calcTLastMCM(MCM):
     tkeys = [num for num in MCM.keys() if isinstance(num, (int))]
@@ -58,23 +62,30 @@ def calcTLastMCM(MCM):
         maximum = max(max(tkeys), max(tvals))
     return maximum
 
+
 def calcHit(MCM, LMCM, DMCM, maxEditDistance, M):
-    if LMCM == M and DMCM == LMCM:                                                                     #if size of MCM == length of query and DMCM = size of MCM; hit == 1
+    if LMCM == M and DMCM == LMCM:  # if size of MCM == length of query and DMCM = size of MCM; hit == 1
         hit = 1
-    elif LMCM == M and LMCM < DMCM and DMCM <= M + maxEditDistance:                                    #if size of MCM == length of query and size of MCM < DMCM <= size of query + max edit distance; hit == 2
+    # if size of MCM == length of query and size of MCM < DMCM <= size of query + max edit distance; hit == 2
+    elif LMCM == M and LMCM < DMCM and DMCM <= M + maxEditDistance:
         hit = 2
-    elif M - maxEditDistance <= LMCM and LMCM < M and DMCM == LMCM:                                #if length of query - max edit distance <= size of MCM < length of query and DMCM == size of MCM; hit == 3
+    # if length of query - max edit distance <= size of MCM < length of query and DMCM == size of MCM; hit == 3
+    elif M - maxEditDistance <= LMCM and LMCM < M and DMCM == LMCM:
         hit = 3
-    elif M - maxEditDistance <= LMCM and LMCM < M and DMCM == M:                                       #if length of query - max edit distance <= size of MCM < length of query and DMCM == length of query; hit == 4
+    # if length of query - max edit distance <= size of MCM < length of query and DMCM == length of query; hit == 4
+    elif M - maxEditDistance <= LMCM and LMCM < M and DMCM == M:
         hit = 4
-    elif M - maxEditDistance <= LMCM and LMCM < M and LMCM <= DMCM and DMCM < M:                   #if length of query - max edit distance <= size of MCM < length of query and size of MCM <= DMCM < length of query; hit == 5
+    # if length of query - max edit distance <= size of MCM < length of query and size of MCM <= DMCM < length of query; hit == 5
+    elif M - maxEditDistance <= LMCM and LMCM < M and LMCM <= DMCM and DMCM < M:
         hit = 5
-    elif M - maxEditDistance <= LMCM and LMCM < M and M < DMCM and DMCM <= LMCM + maxEditDistance: #if length of query - max edit distance <= size of MCM < length of query and length of query < DMCM <= size of MCM + max edit distance; hit == 6
+    # if length of query - max edit distance <= size of MCM < length of query and length of query < DMCM <= size of MCM + max edit distance; hit == 6
+    elif M - maxEditDistance <= LMCM and LMCM < M and M < DMCM and DMCM <= LMCM + maxEditDistance:
         hit = 6
     else:
         hit = 0
 
     return hit
+
 
 def findVideoSeq(maxEditDistance: Lambda, threshold: Delta, get_distance: DistanceFN, target: Video, query: Video) -> List[List[int]]:
     # imports
@@ -84,42 +95,44 @@ def findVideoSeq(maxEditDistance: Lambda, threshold: Delta, get_distance: Distan
     hitPos = []
     hitSize = []
     hitType = []
-    #while k < TargetVideo.framecount - QueryVideo.framecount - maxEditDistance:
+    # while k < TargetVideo.framecount - QueryVideo.framecount - maxEditDistance:
     check = len(target) - len(query) - maxEditDistance - 2
-    while k < check: #Potentially -2 as well?
+    while k < check:  # Potentially -2 as well?
         print(k, "/", check)
-        #construct bipartite graph of query video and target clip and calculate maximum cardinality of graph and the Frames for the graph
-        LMCM, MCM, BG = createBipartiteGraph(target, query, threshold, k, DistanceFN)
-        #calculate tf (min tframe in MCM) and tl (max tframe in MCM)
+        # construct bipartite graph of query video and target clip and calculate maximum cardinality of graph and the Frames for the graph
+        LMCM, MCM, BG = createBipartiteGraph(
+            target, query, threshold, k, get_distance)
+        # calculate tf (min tframe in MCM) and tl (max tframe in MCM)
         tf = calcTFirstMCM(MCM)
         tl = calcTLastMCM(MCM)
 
-        #calculate DMCM
+        # calculate DMCM
         DMCM = tl-tf+1
 
-        #calculate hit type
+        # calculate hit type
         hit = calcHit(MCM, LMCM, DMCM, maxEditDistance, len(query)-1)
-        #if hit function does not return 0
-        if hit > 0: #Query was found at location k
+        # if hit function does not return 0
+        if hit > 0:  # Query was found at location k
             hitPos.append(tf)
             hitSize.append(DMCM)
             hitType.append(hit)
             k = tl + 1
-        else: #else query not found
-            #if size of max card match = 0 then
+        else:  # else query not found
+            # if size of max card match = 0 then
             if LMCM == 0:
-                #k=k+(length of Query video + max edit distance)
+                # k=k+(length of Query video + max edit distance)
                 k = k + len(query) + maxEditDistance
-            else: 
-                #k = max(k + query video length - (size of max card match + edit threshold), tf)
+            else:
+                # k = max(k + query video length - (size of max card match + edit threshold), tf)
                 a = k + len(query) - (LMCM + maxEditDistance)
                 k = max(a, tf)
     return [hitPos, hitSize, hitType]
 
-#note, when specifying the threshold, as of right now it is based on distance and not similarity, i.e. if the distance is < the threshold it is a hit
-# I was having trouble with get_video_frame
-TargetVideo = get_video_frame('c:/Users/Emmy/Downloads/query1.mp4')
-QueryVideo = get_video_frame('c:/Users/Emmy/Downloads/query1.mp4')
 
-one, two = get_histograms(TargetVideo[0], QueryVideo[0])
-print("done")
+# note, when specifying the threshold, as of right now it is based on distance and not similarity, i.e. if the distance is < the threshold it is a hit
+# I was having trouble with get_video_frame
+# TargetVideo = get_video_frame('c:/Users/Emmy/Downloads/query1.mp4')
+# QueryVideo = get_video_frame('c:/Users/Emmy/Downloads/query1.mp4')
+
+# one, two = get_histograms(TargetVideo[0], QueryVideo[0])
+# print("done")

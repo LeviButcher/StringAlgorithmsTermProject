@@ -9,3 +9,4 @@ pytest-watch
 sklearn
 pytest-mock
 scikit-video
+networkx

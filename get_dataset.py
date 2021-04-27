@@ -75,12 +75,4 @@ def get_query_video_set(path: str, type: bool) -> [(str, bool)]:
 
 def get_video_frame(path: str) -> Video:
     print(path)
-    return skvideo.io.vread(path, height=852, width=480)
-    #print(path)
-    #cap = cv2.VideoCapture(path)
-    #video = []
-    #while(cap.isOpened()):
-    #    ret, frame = cap.read()
-    #    cap.release() if not ret else video.append(frame)
-    #cv2.destroyAllWindows()
-    #return video
+    return skvideo.io.vread(path, height=852, width=480, as_grey=True)
