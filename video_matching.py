@@ -18,14 +18,16 @@ def createBipartiteGraph(TargetVideo, QueryVideo, threshold, k, DistanceFN):
     # for i in range(0,k-1):
     #    successT, Tframe = TargetVideo.read()
 
-    for i in range(0, len(QueryVideo-1)):
-        #successT, Tframe = TargetVideo.read()
-        #BG.add_nodes_from([k+i], bipartite=0)
+    for i in range(0, len(QueryVideo)):
+        # successT, Tframe = TargetVideo.read()
+        # BG.add_nodes_from([k+i], bipartite=0)
         tNodes.append(k+i)
-        #successQ, Qframe = QueryVideo.read()
-        #BG.add_nodes_from([i], bipartite=1)
+        # successQ, Qframe = QueryVideo.read()
+        # BG.add_nodes_from([i], bipartite=1)
         qNodes.append(str(i))
 
+        tframe = TargetVideo[k+i]
+        qframe = QueryVideo[i]
         intersection = DistanceFN(TargetVideo[k+i], QueryVideo[i])
         # print(distance)
 
@@ -64,6 +66,7 @@ def calcTLastMCM(MCM):
 
 
 def calcHit(MCM, LMCM, DMCM, maxEditDistance, M):
+    hit = 0
     if LMCM == M and DMCM == LMCM:  # if size of MCM == length of query and DMCM = size of MCM; hit == 1
         hit = 1
     # if size of MCM == length of query and size of MCM < DMCM <= size of query + max edit distance; hit == 2
@@ -87,31 +90,33 @@ def calcHit(MCM, LMCM, DMCM, maxEditDistance, M):
     return hit
 
 
-def findVideoSeq(maxEditDistance: Lambda, threshold: Delta, get_distance: DistanceFN, target: Video, query: Video) -> List[List[int]]:
-    # imports
+def findVideoSeq(l: Lambda, threshold: Delta, get_distance: DistanceFN, target: Video, query: Video) -> List[List[int]]:
     from networkx.algorithms import bipartite
+    import math
+
+    N = len(target)
+    M = len(query)
+    maxEditDistance = math.floor(l * M)
 
     k = 0
     hitPos = []
     hitSize = []
     hitType = []
-    # while k < TargetVideo.framecount - QueryVideo.framecount - maxEditDistance:
-    check = len(target) - len(query) - maxEditDistance - 2
-    while k < check:  # Potentially -2 as well?
-        print(k, "/", check)
-        # construct bipartite graph of query video and target clip and calculate maximum cardinality of graph and the Frames for the graph
+
+    print(N, M)
+
+    while k < N - M - maxEditDistance:
+        print(k, "/", N - M - maxEditDistance)
+
         LMCM, MCM, BG = createBipartiteGraph(
             target, query, threshold, k, get_distance)
-        # calculate tf (min tframe in MCM) and tl (max tframe in MCM)
+
         tf = calcTFirstMCM(MCM)
         tl = calcTLastMCM(MCM)
 
-        # calculate DMCM
         DMCM = tl-tf+1
 
-        # calculate hit type
-        hit = calcHit(MCM, LMCM, DMCM, maxEditDistance, len(query)-1)
-        # if hit function does not return 0
+        hit = calcHit(MCM, LMCM, DMCM, maxEditDistance, M)
         if hit > 0:  # Query was found at location k
             hitPos.append(tf)
             hitSize.append(DMCM)
@@ -121,17 +126,19 @@ def findVideoSeq(maxEditDistance: Lambda, threshold: Delta, get_distance: Distan
             # if size of max card match = 0 then
             if LMCM == 0:
                 # k=k+(length of Query video + max edit distance)
-                k = k + len(query) + maxEditDistance
+                k = k + M + maxEditDistance
             else:
                 # k = max(k + query video length - (size of max card match + edit threshold), tf)
-                a = k + len(query) - (LMCM + maxEditDistance)
+                a = k + M - (LMCM + maxEditDistance)
+
                 k = max(a, tf)
-    return [hitPos, hitSize, hitType]
+
+    return hitPos
 
 
 # note, when specifying the threshold, as of right now it is based on distance and not similarity, i.e. if the distance is < the threshold it is a hit
 # I was having trouble with get_video_frame
-# TargetVideo = get_video_frame('c:/Users/Emmy/Downloads/query1.mp4')
+# TargetVideo = get_video_frame('../../Downloads/SimulatedDataset/query1.mp4')
 # QueryVideo = get_video_frame('c:/Users/Emmy/Downloads/query1.mp4')
 
 # one, two = get_histograms(TargetVideo[0], QueryVideo[0])

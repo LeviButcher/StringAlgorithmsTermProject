@@ -1,6 +1,6 @@
 from get_dataset import get_dataset
 from utils import compute_stats_all_distances
-from distance_fns import histogram_difference, histogram_intersection, histogram_mean_difference
+from distance_fns import histogram_difference, histogram_intersection, histogram_mean_difference, absolute_distance
 import pandas as pd
 from custom_types import *
 import sys
@@ -10,9 +10,13 @@ datasetPath = str(sys.argv[1])
 allLambdas = [.1, .2, .3]
 allDeltas = [.1, .2, .3]
 
+# allLambdas = [.2]
+# allDeltas = [.05]
+
 distanceFunctions = [("Histogram Differences", histogram_difference),
                      ("Histogram Intersection", histogram_intersection),
-                     ("Histogram Mean Difference", histogram_mean_difference)]
+                     ("Histogram Mean Difference", histogram_mean_difference),
+                     ("Histogram Absolute Difference", absolute_distance)]
 
 
 print(f"Importing Dataset at: {datasetPath}")

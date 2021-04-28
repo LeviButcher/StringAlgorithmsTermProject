@@ -74,5 +74,4 @@ def get_query_video_set(path: str, type: bool) -> [(str, bool)]:
 
 
 def get_video_frame(path: str) -> Video:
-    print(path)
-    return skvideo.io.vread(path, height=852, width=480, as_grey=True)
+    return skvideo.io.vread(path, as_grey=True)
