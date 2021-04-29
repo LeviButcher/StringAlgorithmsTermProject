@@ -101,6 +101,14 @@ def absolute_distance(frame1, frame2):
     # Leads to element-wise absolute distance between each value in the frame
     # Would be interesting to investigate insertions and deletions but memory is limited...
 
+    # Resize images if different sizes
+    if len(frame1) != len(frame2) or len(frame1[0]) != len(frame2[0]):
+        # Make larger image smaller
+        if len(frame1) > len(frame2):
+            frame1 = cv2.resize(frame1, dsize=(len(frame2[0]), len(frame2)))
+        else:
+            frame2 = cv2.resize(frame2, dsize=(len(frame1[0]), len(frame1)))
+
     # Sum pixel difference
     # Clip to avoid wraparound during subtraction...
     dist_array1 = (frame1.astype(np.int16) -
@@ -121,16 +129,18 @@ def absolute_distance(frame1, frame2):
 # Main for testing
 if __name__ == "__main__":
 
-    #im1 = cv2.imread('./sample_images/hist_lowkey.jpg')
-    #im1 = cv2.imread('./sample_images/hist_highkey_auto.jpg')
+    #im1 = cv2.imread('../sample_images/hist_lowkey.jpg')
+    #im1 = cv2.imread('../sample_images/hist_highkey_auto.jpg')
 
-    im1 = cv2.imread('./sample_images/hist_highcont.jpg')
+    im1 = cv2.imread('../sample_images/hist_highcont.jpg')
 
-    #im2 = cv2.imread('./sample_images/hist_lowkey.jpg')
-    #im2 = cv2.imread('./sample_images/hist_lowkey_auto.jpg')
-    #im2 = cv2.imread('./sample_images/hist_highkey.jpg')
+    #im2 = cv2.imread('../sample_images/hist_lowkey.jpg')
+    #im2 = cv2.imread('../sample_images/hist_lowkey_auto.jpg')
+    #im2 = cv2.imread('../sample_images/hist_highkey.jpg')
 
-    im2 = cv2.imread('./sample_images/hist_lowcont.jpg')
+    #im2 = cv2.imread('../sample_images/hist_lowcont.jpg')
+    im2 = cv2.imread('../sample_images/hist_highcont.jpg')
+    #im1 = im1[:][:-1]
 
     # Convert to grayscale for testing
     im1 = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
