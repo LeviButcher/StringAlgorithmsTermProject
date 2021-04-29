@@ -103,10 +103,10 @@ def findVideoSeq(l: Lambda, threshold: Delta, get_distance: DistanceFN, target: 
     hitSize = []
     hitType = []
 
-    print(N, M)
+    # print(N, M)
 
     while k < N - M - maxEditDistance:
-        print(k, "/", N - M - maxEditDistance)
+        # print(k, "/", N - M - maxEditDistance)
 
         LMCM, MCM, BG = createBipartiteGraph(
             target, query, threshold, k, get_distance)

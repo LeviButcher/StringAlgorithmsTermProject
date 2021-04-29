@@ -3,6 +3,8 @@ from custom_types import *
 import video_matching
 from sklearn.metrics import confusion_matrix
 import get_dataset
+from datetime import datetime
+import concurrent.futures
 
 
 def compute_precision_recall(cm):
@@ -15,12 +17,22 @@ def compute_precision_recall(cm):
 def evaluate_target_set(l: Lambda, d: Delta, distanceFN: DistanceFN, target: str, queries: [str]):
     targetVideo = get_dataset.get_video_frame(target)
     queryVideos = [get_dataset.get_video_frame(q) for q, _ in queries]
-    return [video_matching.findVideoSeq(l, d, distanceFN, targetVideo, q) for q in queryVideos]
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        res = [executor.submit(video_matching.findVideoSeq, l, d,
+                               distanceFN, targetVideo, q) for q in queryVideos]
+        return [r.result() for r in res]
+
+    # return [video_matching.findVideoSeq(l, d, distanceFN, targetVideo, q) for q in queryVideos]
 
 
 def measure_distance_performance(l: Lambda, d: Delta, distanceFN: DistanceFN, dataset: VideoDataset) -> ConfusionMatrix:
+    before = datetime.now()
     predictions = [evaluate_target_set(l, d, distanceFN, target, querySet)
                    for target, querySet in dataset]
+    after = datetime.now()
+    print(
+        f"Ran with Lambda:{l}, Delta:{d}, distance:{distanceFN.__name__} for {after - before}")
 
     return generate_confusion_matrix(dataset, predictions)
 
@@ -40,6 +52,18 @@ def measure_all_hyperparams_performance(ls: List[Lambda], ds: List[Delta], dista
             for l in ls for d in ds]
 
 
+def measure_all_hyperparams_and_distances_performance(distances: (str, DistanceFN), ls: List[Lambda], ds: List[Delta], dataset: VideoDataset) -> List[Tuple[str, Lambda, Delta, ConfusionMatrix]]:
+
+    # with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+    #     res = [(diName, l, d, executor.submit(measure_distance_performance, l, d, df, dataset))
+    #            for l in ls for d in ds for diName, df in distances]
+
+    #     return [(diName, l, d, r.result()) for diName, l, d, r in res]
+
+    return [(diName, l, d, measure_distance_performance(l, d, df, dataset))
+            for l in ls for d in ds for diName, df in distances]
+
+
 def removeNewLine(cm: ConfusionMatrix):
     return str(cm).replace('\n', '')
 
@@ -52,13 +76,8 @@ def get_stat_dataframe(distanceName: str, l: Lambda, d: Delta, cm: ConfusionMatr
     return pd.DataFrame(data=dataGroup)
 
 
-def compute_stats(name: str, df: DistanceFN, ls: List[Lambda], ds: List[Delta], dataset: VideoDataset):
-    res = measure_all_hyperparams_performance(
-        ls, ds, df, dataset)
+def compute_stats(distances: (str, DistanceFN), ls: List[Lambda], ds: List[Delta], dataset: VideoDataset):
+    res = measure_all_hyperparams_and_distances_performance(
+        distances, ls, ds, dataset)
 
-    return pd.concat([get_stat_dataframe(name, l, d, cm) for l, d, cm in res])
-
-
-def compute_stats_all_distances(distances: [Tuple[str, DistanceFN]], ls: List[Lambda], ds: List[Delta], dataset: VideoDataset):
-    return pd.concat([compute_stats(
-        name, df, ls, ds, dataset) for name, df in distances])
+    return pd.concat([get_stat_dataframe(name, l, d, cm) for name, l, d, cm in res])

@@ -2,7 +2,7 @@
 
 from os import listdir
 from os.path import isfile, join, exists
-from custom_types import VideoDataset, Video
+from custom_types import VideoDataset, Video, FrameDataset
 import cv2
 import skvideo.io
 
@@ -60,7 +60,7 @@ def get_video_set(path: str) -> (str, [(str, bool)]):
     falsePaths = get_query_video_set(
         join(path, FALSE_QUERY_SUB_DIR), False)
 
-    queryPaths = [ff for f in [truePaths, falsePaths] for ff in f]
+    queryPaths = truePaths + falsePaths
 
     return (targetPath, queryPaths)
 
@@ -75,3 +75,8 @@ def get_query_video_set(path: str, type: bool) -> [(str, bool)]:
 
 def get_video_frame(path: str) -> Video:
     return skvideo.io.vread(path, as_grey=True)
+
+# Bricks Machine on large data
+# def get_dataset_frames(path: str) -> FrameDataset:
+#     def queryPathToFrame(q): return (get_video_frame(q[0]), q[1])
+#     return [(get_video_frame(v), map(queryPathToFrame, q)) for v, q in get_dataset(path)]
