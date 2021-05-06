@@ -108,13 +108,15 @@ def absolute_distance(frame1, frame2):
             frame1 = cv2.resize(frame1, dsize=(len(frame2[0]), len(frame2)))
         else:
             frame2 = cv2.resize(frame2, dsize=(len(frame1[0]), len(frame1)))
+    
+    # Remove empty dimensions
+    frame1 = np.squeeze(frame1)
+    frame2 = np.squeeze(frame2)
 
     # Sum pixel difference
     # Clip to avoid wraparound during subtraction...
-    dist_array1 = (frame1.astype(np.int16) -
-                   frame2).clip(0, 255).astype(np.uint8)
-    dist_array2 = (frame2.astype(np.int16) -
-                   frame1).clip(0, 255).astype(np.uint8)
+    dist_array1 = (frame1.astype(np.int16) - frame2).clip(0, 255).astype(np.uint8)
+    dist_array2 = (frame2.astype(np.int16) - frame1).clip(0, 255).astype(np.uint8)
     dist_array = dist_array1 + dist_array2
 
     distance = np.sum(dist_array)
@@ -148,8 +150,8 @@ if __name__ == "__main__":
 
     #int_dist = histogram_intersection(im1, im2)
     #int_dist = histogram_difference(im1, im2)
-    #int_dist = histogram_mean_difference(im1, im2)
-    int_dist = absolute_distance(im1, im2)
+    int_dist = histogram_mean_difference(im1, im2)
+    #int_dist = absolute_distance(im1, im2)
 
     print(int_dist)
 
